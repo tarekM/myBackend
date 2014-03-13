@@ -15,7 +15,8 @@ class UsersController < ApplicationController
 		@user_events = current_user.events.order(start_time: :asc, end_time: :asc)
 
 		if @user_events.blank?
-			render json: {[id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400']}
+			render json: [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}]
+			return
 			#event_result = current_user.events.create(title: "Example Event!", start_time: 1200, end_time: 1400)
 			#@user_events = current_user.events
 		end
@@ -85,7 +86,8 @@ class UsersController < ApplicationController
 		# TODO: update with redirect
 		@user_events = current_user.events
 		if @user_events.blank?
-			render json: {[id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400']}
+			render json: [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}]
+			return
 			#event_result = current_user.events.create(title: "Example Event!", start_time: 1200, end_time: 1400)
 			#@user_events = current_user.events
 		end
