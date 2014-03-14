@@ -15,3 +15,7 @@ bin/rake db:migrate RAILS_ENV=test
 rspec spec
 
 The tests should run.
+
+To start the server, run
+
+rails s
