@@ -34,8 +34,8 @@ class UsersController < ApplicationController
 		# Check to make sure no parameters are empty. If so, reject immediately
 		if params[:title].empty? || params[:start_time].empty? || params[:end_time].empty?
 			@errors.push("Invalid Input: Non-filled fields")
-			render :add_event
-			return
+			#render :add_event
+			#return
 		end
 		# Convert parameters to appropriate types
 		title = params[:title]

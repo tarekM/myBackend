@@ -126,6 +126,103 @@ describe UsersController do
 		response.body.should == [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}].to_json
 	end
    end
+
+    ########TEST THE SUBMIT EVENT FUNCTIONS##########
+    describe "user adds an event with the correct credentials" do
+        it "should successfully display the event with the id, title, start_time, and end_time" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing", :start_time => 1200, :end_time => 1400
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.size.should == 1
+            first_row = parsed.first.symbolize_keys
+            first_row[:id].should == 1
+            first_row[:title].should == "testing"
+            first_row[:start_time].should == 1200
+            first_row[:end_time].should == 1400
+        end
+    end
+
+    #multiple events added
+    describe "user adds many events with the correct credentials" do
+        it "should successfully display events with the id, title, start_time, and end_time" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing", :start_time => 1200, :end_time => 1400
+            post :submit_new_event, :title => "testing2", :start_time => 1400, :end_time => 1500
+            #post :submit_new_event, :title => "testing3", :start_time => 0200, :end_time => 0300
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == [{"id"=>1, "title"=>"testing", "start_time"=>1200, "end_time"=>1400}, 
+                {"id"=>2, "title"=>"testing2", "start_time"=>1400, "end_time"=>1500}]
+        end
+    end
+
+    #######TEST ERROR CODES FOR SUBMIT#######
+    describe "user adds an event with an empty title" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "", :start_time => 1200, :end_time => 1400
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Input: Non-filled fields"]
+        end
+    end
+
+    describe "user adds an event with an empty start_time" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => "", :end_time => 1400
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Input: Non-filled fields"]
+        end
+    end
+
+    describe "user adds an event with an empty end_time" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => 1200, :end_time => ""
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Input: Non-filled fields"]
+        end
+    end
+
+    describe "user adds an event with a negative start_time" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => -1200, :end_time => 1400
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Time: Seriously? Negative?", "Invalid Time: Start Time not correct format [hhmm]"]
+        end
+    end
+
+    describe "user adds an event with a negative end_time" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => 1200, :end_time => -1400
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Time: Seriously? Negative?", "Invalid Time: End Time not correct format [hhmm]"]
+        end
+    end
+
+     describe "user adds an event with invalid 24 hour format" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => 11200, :end_time => 1500
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Time: Start Time not correct format [hhmm]"]
+        end
+    end
+
+    describe "user adds an event with invalid 24 hour format" do
+        it "should return an error that the input is invalid" do
+            @request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+            post :submit_new_event, :title => "testing1", :start_time => 1200, :end_time => 15000
+            parsed = ActiveSupport::JSON.decode(response.body)
+            parsed.should == ["Invalid Time: End Time not correct format [hhmm]"]
+        end
+    end
+
+
+
+
+
 =begin
     #ADD TWO USERS
     describe "should let server add two users with correct format" do
