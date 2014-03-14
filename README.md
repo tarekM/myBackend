@@ -16,6 +16,6 @@ rspec spec
 
 The tests should run.
 
-To start the server, run
+To start the application, type
 
 rails s
