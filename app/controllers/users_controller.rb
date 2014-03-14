@@ -5,9 +5,9 @@ class UsersController < ApplicationController
 	SUCCESS = 1
 	NO_RECORD = -2
 
-	def index
-  		@users = User.all
-	end
+	#def index
+  		#@users = User.all
+	#end
 
 	def view_events
 		@user_events = current_user.events.order(start_time: :asc, end_time: :asc)
@@ -23,10 +23,10 @@ class UsersController < ApplicationController
 
 	end
 
-	def add_event
+	#def add_event
 
-		render :add_event
-	end
+		#render :add_event
+	#end
 
 	def submit_new_event
 		@errors = []
@@ -82,7 +82,7 @@ class UsersController < ApplicationController
 
 		# Redisplay the events page.
 		# TODO: update with redirect
-		@user_events = current_user.events
+		@user_events = current_user.events.order(start_time: :asc, end_time: :asc)
 		if @user_events.blank?
 			render json: [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}]
 			return

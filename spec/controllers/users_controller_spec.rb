@@ -20,15 +20,14 @@ describe UsersController do
 
     #a user that has multiple events
     describe "a user that has multiple events" do
-	  it "returns correct number of events when view events" do
+	  it "returns correct field values of an event when view events" do
 		@expected = {title: "Testing", start_time: 1400, end_time: 2200}
 		#we use the following to create new events directly instead of doing it via submit_new_event because we want to test this action only
-		subject.current_user.events.create(@expected)
 		subject.current_user.events.create(@expected)
 		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
 		post :view_events
 		parsed = ActiveSupport::JSON.decode(response.body)
-		parsed.size.should == 2 
+		parsed.size.should == 1
 		first_row = parsed.first.symbolize_keys
 		first_row[:id].should == 1
 		first_row[:title].should == "Testing"
@@ -36,6 +35,97 @@ describe UsersController do
 		first_row[:end_time].should == 2200
 	  end
     end
+
+    describe "a user that has multiple events" do
+	it "returns the correct number of events for a user" do
+		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+		#Before adding any events
+		post :view_events
+		parsed = ActiveSupport::JSON.decode(response.body)
+		parsed.size.should == 1
+		
+		@expected = {title: "Testing", start_time: 1400, end_time: 2200}
+		#we use the following to create new events directly instead of doing it via submit_new_event because we want to test this action only
+		(0..9).each do |i|
+			subject.current_user.events.create(@expected)
+		end
+		post :view_events
+		parsed = ActiveSupport::JSON.decode(response.body)
+		parsed.size.should == 10
+		
+		#add one more
+		subject.current_user.events.create(@expected)
+		post :view_events
+		parsed = ActiveSupport::JSON.decode(response.body)
+		parsed.size.should == 11
+	end
+    end
+
+    describe "a user that has multiple events" do
+	it "should return the events sorted in the order ASC (start_time, end_time)" do
+		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+		#add events in order DESC (start_time, end_time) which is the reversed order
+		(0..9).each do |i|
+			@expected = {title: "Testing", start_time: 0100*(9-i), end_time: 0200*(9-i)}
+			subject.current_user.events.create(@expected)
+		end
+		post :view_events
+		parsed = ActiveSupport::JSON.decode(response.body)
+		parsed.size.should == 10
+
+		#first event id should be 10 (last event added but sorted as first)		
+		first_event = parsed.first.symbolize_keys
+		first_event[:id].should == 10
+		
+		#check the rest in a loop
+		(2..10).each do |i|
+			event = parsed[i-1].symbolize_keys
+			event[:id].should == 11-i
+		end
+	end
+    end
+
+    describe "when a user with no events tries to delete an event" do
+	it "should do nothing and returns an Example Event" do
+		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+		post :delete_event, :event_id => '0'
+		response.body.should == [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}].to_json
+	end
+    end
+
+   describe "a user with multiple events delete an event in the middle of the sorted list" do
+	it "should return with a list of events with the correct order" do
+		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+		#add events in order DESC (start_time, end_time) which is the reversed order
+		(0..9).each do |i|
+			@expected = {title: "Testing", start_time: 0100*(9-i), end_time: 0200*(9-i)}
+			subject.current_user.events.create(@expected)
+		end
+		post :delete_event, :event_id => '5' #the middle entry
+		parsed = ActiveSupport::JSON.decode(response.body)
+		parsed.size.should == 9 #check number of events correct?
+		
+		#check the returned events in a loop, we should get the events in this order of event_id: [10 9 8 7 6 4 3 2 1] without 5 there
+		(1..9).each do |i|
+			event = parsed[i-1].symbolize_keys
+			if i < 6
+				event[:id].should == 11-i
+			else
+				event[:id].should == 10-i
+			end
+		end
+	end
+   end
+
+   describe "when user only has one event and he deletes that event" do
+	it "should get the Example Event" do
+		@request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(subject.current_user.email, "123")
+		@expected = {title: "Testing", start_time: 0100, end_time: 0200}
+		subject.current_user.events.create(@expected)
+		post :delete_event, :event_id => '1'
+		response.body.should == [{id: '0', title: 'Example Event!', start_time: '1200', end_time: '1400'}].to_json
+	end
+   end
 =begin
     #ADD TWO USERS
     describe "should let server add two users with correct format" do
