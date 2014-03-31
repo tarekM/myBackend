@@ -1,7 +1,21 @@
 Navigator::Application.routes.draw do
+  devise_for :users
   get "users/index"
   
-  devise_for :users
+  # devise_for :users, :path => '', :path_names => {:sign_in => "login",:sign_out => "logout",
+  #     :sign_up => "register" }
+
+  namespace :api do
+    namespace :v1 do
+      devise_scope :user do
+        post 'registrations' => 'registrations#create', :as => 'register'
+        post 'sessions' => 'sessions#create', :as => 'login'
+        delete 'sessions' => 'sessions#destroy', :as => 'logout'
+        end
+    end
+  end
+  
+
   get "users/view_events"
 
   get "users/add_event"

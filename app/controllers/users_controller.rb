@@ -5,9 +5,17 @@ class UsersController < ApplicationController
 	SUCCESS = 1
 	NO_RECORD = -2
 
-	#def index
-  		#@users = User.all
-	#end
+	before_filter :authenticate_user!
+
+	#skip_before_filter: verify_authenticity_token
+
+	def index
+  		@users = User.all
+	end
+	# skip_before_filter :verify_authenticity_token,
+	#  				   :if => Proc.new { |c| c.request.format == 'application/json'}
+
+	# respond_to :json
 
 	def view_events
 		@user_events = current_user.events.order(start_time: :asc, end_time: :asc)
@@ -15,8 +23,8 @@ class UsersController < ApplicationController
 		if @user_events.blank?
 			render json: [{id:'0', title:'Example Event!', start_time:'1200', end_time:'1400'}]
 			return
-			#event_result = current_user.events.create(title: "Example Event!", start_time: 1200, end_time: 1400)
-			#@user_events = current_user.events
+			# event_result = current_user.events.create(title: "Example Event!", start_time: 1200, end_time: 1400)
+			# @user_events = current_user.events
 		end
 
 		render json: @user_events.as_json(:only => [:title, :start_time, :end_time, :id])
