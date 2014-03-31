@@ -6,11 +6,12 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
 
   def create
     build_resource
+    resource = User.new(params[:user])
     resource.confirmed_at = Time.now
     if resource.save
       sign_in resource
-      render :status => 200,
-           :json => { :success => true,
+      render  :status => 200,
+              :json => { :success => true,
                       :info => "Registered",
                       :data => { :user => resource,
                                  :auth_token => current_user.authentication_token } }

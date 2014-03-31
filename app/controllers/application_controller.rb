@@ -9,6 +9,12 @@ class ApplicationController < ActionController::Base
   before_filter :authenticate_user!
  
   private
+
+  before_filter :configure_permitted_parameters, if: :devise_controller?
+  
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.for(:sign_up) { |u| u.permit(:name, :email,:password,:password_confirmation, :confirmed_at) }
+  end
   
   # For this example, we are simply using token authentication
   # via parameters. However, anyone could use Rails's token
